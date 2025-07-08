@@ -215,7 +215,7 @@ router.beforeEach((to, from, next) => {
   } else {
     // 不需要登录，直接放行
     // 但如果有token且已过期，也要清除
-    if (userStore.token && userStore.isTokenExpired()) {
+    if (userStore.token && userStore.isTokenExpired() && to.meta.requiresAuth) {
       userStore.logout()
     }
     next()

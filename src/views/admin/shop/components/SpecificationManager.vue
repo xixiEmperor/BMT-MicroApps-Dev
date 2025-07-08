@@ -1,14 +1,14 @@
 <script setup>
-import { ref,  onMounted } from 'vue'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { Delete, Plus, Setting } from '@element-plus/icons-vue'
 import {
   getProductSpecifications,
   getProductSpecOptions,
   addProductSpecification,
   updateSpecification,
   deleteSpecification,
-  // updateProduct
 } from '@/api/shop'
+import { createSpecificationTaskQueue } from '@/utils/TaskQueue'
 
 const props = defineProps({
   visible: {
@@ -43,6 +43,35 @@ const existingSpecifications = ref([])
 // 编辑模式规格
 const editingSpec = ref(null)
 
+// 任务队列相关
+const taskQueue = ref(null)
+const queueProgress = ref({
+  total: 0,
+  completed: 0,
+  failed: 0,
+  executing: 0,
+  pending: 0,
+  percentage: 0,
+  isComplete: false,
+  elapsedTime: 0
+})
+
+// 队列配置
+const queueConfig = ref({
+  maxConcurrent: 2,
+  requestInterval: 200,
+  maxRetries: 3,
+  retryDelay: 1500,
+  timeout: 15000
+})
+
+// 配置对话框
+const configDialogVisible = ref(false)
+
+// 失败任务详情对话框
+const failedTasksDialogVisible = ref(false)
+const failedTasks = ref([])
+
 // 规格选项映射
 const specKeyMap = {
   'color': '颜色',
@@ -59,6 +88,13 @@ onMounted(async () => {
       loadProductSpecifications(),
       loadProductSpecOptions()
     ])
+  }
+})
+
+// 组件销毁时清理任务队列
+onUnmounted(() => {
+  if (taskQueue.value) {
+    taskQueue.value.destroy()
   }
 })
 
@@ -182,7 +218,40 @@ const generateCombinations = (optionsData) => {
   return combine(0, {})
 }
 
-// 保存所有规格
+// 创建任务队列
+const createQueue = () => {
+  if (taskQueue.value) {
+    taskQueue.value.destroy()
+  }
+
+  taskQueue.value = createSpecificationTaskQueue({
+    ...queueConfig.value,
+    onProgress: (progress) => {
+      queueProgress.value = progress
+    },
+    onTaskComplete: (task, status) => {
+      console.log(`任务 ${task.id} ${status === 'success' ? '成功' : '失败'}`)
+    },
+    onQueueComplete: (results) => {
+      console.log('队列执行完成:', results)
+
+      if (results.failed.length > 0) {
+        failedTasks.value = results.failed
+        ElMessage.warning(`保存完成！成功: ${results.completed.length}，失败: ${results.failed.length}`)
+      } else {
+        ElMessage.success(`所有 ${results.completed.length} 个规格保存成功！`)
+      }
+
+      // 重新加载规格列表
+      loadProductSpecifications()
+    },
+    onError: (task, error) => {
+      console.error('任务执行错误:', task, error)
+    }
+  })
+}
+
+// 保存所有规格（使用任务队列）
 const saveAllSpecifications = async () => {
   if (specCombinations.value.length === 0) {
     ElMessage.warning('请先生成规格组合')
@@ -191,103 +260,108 @@ const saveAllSpecifications = async () => {
 
   submitting.value = true
 
-  // 创建加载提示
-  const loadingInstance = ElLoading.service({
-    lock: true,
-    text: '正在保存所有规格...',
-    background: 'rgba(0, 0, 0, 0.7)'
-  })
-
   try {
-    // 先保存规格选项
-    const specOptions = {}
-    specOptionsForm.value.forEach(opt => {
-      if (opt.values && opt.values.length > 0) {
-        const key = opt.key === 'custom' ? opt.customKey : opt.key
-        if (key) {
-          specOptions[key] = opt.values
-        }
+    // 创建任务队列
+    createQueue()
+
+    // 将规格组合转换为任务
+    const tasks = specCombinations.value.map(combo => ({
+      fn: async (data, signal) => {
+        // 任务执行函数
+        return await addProductSpecification(props.productId, {
+          specifications: data.specs,
+          priceAdjustment: data.priceAdjustment,
+          stock: data.stock
+        }, {
+          signal: signal
+        })
+      },
+      data: combo,
+      options: {
+        priority: 1 // 可以根据需要设置优先级
       }
-    })
+    }))
 
-    // 更新商品以启用规格
-      // const productUpdate = {
-      //   hasSpecification: 1,
-      //   specOptions: JSON.stringify(specOptions)
-      // }
+    // 批量添加任务
+    taskQueue.value.addTasks(tasks)
 
-    // 更新商品规格设置
-    // await updateProduct(props.productId, productUpdate)
+    // 开始执行队列
+    await taskQueue.value.start()
 
-    // 保存所有规格组合
-    // 使用定时器控制请求发送速率
-    const results = []
-    const failedSpecs = []
-    const totalSpecs = specCombinations.value.length
-
-    // 创建进度提示组件
-    const progressMessage = ElMessage({
-      type: 'info',
-      message: `正在保存规格...`,
-      duration: 0,
-      showClose: true
-    })
-
-    // 使用Promise完成所有保存任务
-    await new Promise((resolve) => {
-      let index = 0
-
-      const saveNext = async () => {
-        if (index >= specCombinations.value.length) {
-          resolve()
-          return
-        }
-
-        const combo = specCombinations.value[index]
-
-        // 更新进度消息
-        progressMessage.message = `正在保存规格... (${index + 1}/${totalSpecs})`
-
-        try {
-          const result = await addProductSpecification(props.productId, {
-            specifications: combo.specs,
-            priceAdjustment: combo.priceAdjustment,
-            stock: combo.stock
-          })
-          results.push(result)
-        } catch (error) {
-          console.error('保存规格失败:', error)
-          failedSpecs.push(combo)
-        }
-
-        index++
-        setTimeout(saveNext, 30) // 每隔30ms发送一次请求
-      }
-
-      saveNext()
-    })
-
-    // 关闭进度消息
-    progressMessage.close()
-
-    // 根据结果显示消息
-    if (failedSpecs.length === 0) {
-      ElMessage.success('所有规格保存成功')
-    } else {
-      ElMessage.warning(`保存完成，但有${failedSpecs.length}个规格保存失败`)
-      console.error('保存失败的规格:', failedSpecs)
-    }
-
-    await loadProductSpecifications()
+    // 清空规格组合
     specCombinations.value = []
+
   } catch (error) {
     console.error('保存规格失败:', error)
     ElMessage.error('保存规格失败，请稍后重试')
   } finally {
-    // 关闭加载提示
-    loadingInstance.close()
     submitting.value = false
   }
+}
+
+// 暂停队列
+const pauseQueue = () => {
+  if (taskQueue.value) {
+    taskQueue.value.pause()
+    ElMessage.info('队列已暂停')
+  }
+}
+
+// 恢复队列
+const resumeQueue = () => {
+  if (taskQueue.value) {
+    taskQueue.value.resume()
+    ElMessage.info('队列已恢复')
+  }
+}
+
+// 停止队列
+const stopQueue = () => {
+  if (taskQueue.value) {
+    taskQueue.value.stop()
+    ElMessage.info('队列已停止')
+    submitting.value = false
+  }
+}
+
+// 重试失败任务
+const retryFailedTasks = async () => {
+  if (taskQueue.value && failedTasks.value.length > 0) {
+    taskQueue.value.retryFailedTasks()
+    failedTasks.value = []
+    failedTasksDialogVisible.value = false
+    ElMessage.info('失败任务已重新加入队列')
+  }
+}
+
+// 打开配置对话框
+const openConfigDialog = () => {
+  configDialogVisible.value = true
+}
+
+// 保存配置
+const saveConfig = () => {
+  if (taskQueue.value) {
+    taskQueue.value.updateConfig(queueConfig.value)
+  }
+  configDialogVisible.value = false
+  ElMessage.success('配置已更新')
+}
+
+// 查看失败任务
+const viewFailedTasks = () => {
+  if (taskQueue.value) {
+    const results = taskQueue.value.getResults()
+    failedTasks.value = results.failed
+    failedTasksDialogVisible.value = true
+  }
+}
+
+// 格式化时间
+const formatTime = (ms) => {
+  if (ms < 1000) return `${ms}ms`
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
+  return `${(ms / 60000).toFixed(1)}min`
 }
 
 // 编辑规格
@@ -349,7 +423,21 @@ const handleDeleteSpec = (specId) => {
 
 // 关闭对话框
 const handleClose = () => {
-  emit('close')
+  // 如果有正在执行的队列，询问是否停止
+  if (taskQueue.value && queueProgress.value.executing > 0) {
+    ElMessageBox.confirm('当前有任务正在执行，确认关闭吗？', '提示', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+      .then(() => {
+        stopQueue()
+        emit('close')
+      })
+      .catch(() => {})
+  } else {
+    emit('close')
+  }
 }
 
 // 规格操作完成
@@ -363,7 +451,7 @@ const handleSuccess = () => {
   <el-dialog
     title="商品规格管理"
     :modelValue="visible"
-    width="800px"
+    width="900px"
     @close="handleClose"
   >
     <div class="specification-manager" v-loading="loading">
@@ -423,7 +511,17 @@ const handleSuccess = () => {
 
       <!-- 规格组合生成 -->
       <div class="spec-combinations-section">
-        <h4>步骤2: 生成规格组合</h4>
+        <div class="section-header">
+          <h4>步骤2: 生成规格组合</h4>
+          <el-button
+            type="info"
+            size="small"
+            @click="openConfigDialog"
+            :icon="Setting">
+            队列配置
+          </el-button>
+        </div>
+
         <el-button type="primary" @click="generateSpecCombinations">生成规格组合</el-button>
 
         <div v-if="specCombinations.length > 0" class="combinations-table">
@@ -459,10 +557,65 @@ const handleSuccess = () => {
             </el-table-column>
           </el-table>
 
-          <div class="actions">
-            <el-button type="primary" :loading="submitting" @click="saveAllSpecifications">
-              保存所有规格
-            </el-button>
+          <!-- 任务队列控制面板 -->
+          <div class="queue-control-panel">
+            <div class="queue-actions">
+              <el-button
+                type="primary"
+                :loading="submitting"
+                @click="saveAllSpecifications"
+                :disabled="queueProgress.executing > 0">
+                开始保存所有规格
+              </el-button>
+
+              <el-button
+                v-if="queueProgress.executing > 0"
+                type="warning"
+                @click="pauseQueue">
+                暂停
+              </el-button>
+
+              <el-button
+                v-if="queueProgress.executing > 0"
+                type="info"
+                @click="resumeQueue">
+                恢复
+              </el-button>
+
+              <el-button
+                v-if="queueProgress.executing > 0"
+                type="danger"
+                @click="stopQueue">
+                停止
+              </el-button>
+
+              <el-button
+                v-if="queueProgress.failed > 0"
+                type="warning"
+                @click="viewFailedTasks">
+                查看失败任务 ({{ queueProgress.failed }})
+              </el-button>
+            </div>
+
+            <!-- 进度显示 -->
+            <div v-if="queueProgress.total > 0" class="progress-info">
+              <div class="progress-stats">
+                <el-tag type="info">总计: {{ queueProgress.total }}</el-tag>
+                <el-tag type="success">已完成: {{ queueProgress.completed }}</el-tag>
+                <el-tag type="warning">执行中: {{ queueProgress.executing }}</el-tag>
+                <el-tag type="info">待处理: {{ queueProgress.pending }}</el-tag>
+                <el-tag v-if="queueProgress.failed > 0" type="danger">失败: {{ queueProgress.failed }}</el-tag>
+                <el-tag type="info">耗时: {{ formatTime(queueProgress.elapsedTime) }}</el-tag>
+              </div>
+
+              <el-progress
+                :percentage="queueProgress.percentage"
+                :status="queueProgress.failed > 0 ? 'exception' :
+                         queueProgress.isComplete ? 'success' : 'primary'"
+                :show-text="true"
+                class="progress-bar">
+              </el-progress>
+            </div>
           </div>
         </div>
       </div>
@@ -547,6 +700,101 @@ const handleSuccess = () => {
         <el-button type="primary" @click="handleSuccess">完成</el-button>
       </div>
     </template>
+
+    <!-- 队列配置对话框 -->
+    <el-dialog
+      title="任务队列配置"
+      v-model="configDialogVisible"
+      width="500px">
+      <el-form :model="queueConfig" label-width="120px">
+        <el-form-item label="最大并发数">
+          <el-input-number
+            v-model="queueConfig.maxConcurrent"
+            :min="1"
+            :max="10"
+            controls-position="right">
+          </el-input-number>
+          <div class="form-tip">建议设置为1-3，避免数据库死锁</div>
+        </el-form-item>
+
+        <el-form-item label="请求间隔(ms)">
+          <el-input-number
+            v-model="queueConfig.requestInterval"
+            :min="50"
+            :max="2000"
+            :step="50"
+            controls-position="right">
+          </el-input-number>
+          <div class="form-tip">请求之间的间隔时间，减少服务器压力</div>
+        </el-form-item>
+
+        <el-form-item label="最大重试次数">
+          <el-input-number
+            v-model="queueConfig.maxRetries"
+            :min="0"
+            :max="10"
+            controls-position="right">
+          </el-input-number>
+        </el-form-item>
+
+        <el-form-item label="重试延迟(ms)">
+          <el-input-number
+            v-model="queueConfig.retryDelay"
+            :min="500"
+            :max="10000"
+            :step="500"
+            controls-position="right">
+          </el-input-number>
+        </el-form-item>
+
+        <el-form-item label="请求超时(ms)">
+          <el-input-number
+            v-model="queueConfig.timeout"
+            :min="5000"
+            :max="60000"
+            :step="5000"
+            controls-position="right">
+          </el-input-number>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="configDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveConfig">保存配置</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 失败任务对话框 -->
+    <el-dialog
+      title="失败任务详情"
+      v-model="failedTasksDialogVisible"
+      width="700px">
+      <el-table :data="failedTasks" border max-height="400">
+        <el-table-column label="任务ID" prop="id" width="80"></el-table-column>
+        <el-table-column label="规格组合" width="200">
+          <template #default="scope">
+            <div v-for="(value, key) in scope.row.data.specs" :key="key" class="spec-item">
+              {{ formatSpecKey(key) }}: {{ value }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="重试次数" width="100">
+          <template #default="scope">
+            {{ scope.row.options.retries }}/{{ scope.row.options.maxRetries }}
+          </template>
+        </el-table-column>
+        <el-table-column label="错误信息">
+          <template #default="scope">
+            <el-text type="danger" size="small">{{ scope.row.error?.message || '未知错误' }}</el-text>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="failedTasksDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="retryFailedTasks">重试失败任务</el-button>
+      </template>
+    </el-dialog>
   </el-dialog>
 </template>
 
@@ -562,15 +810,49 @@ const handleSuccess = () => {
     box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
   }
 
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+
+    h4 {
+      margin: 0;
+    }
+  }
+
   .spec-option-row {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
   }
 
-  .actions {
-    margin-top: 15px;
-    text-align: right;
+  .queue-control-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+  }
+
+  .queue-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+
+  .progress-info {
+    .progress-stats {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .progress-bar {
+      margin-top: 10px;
+    }
   }
 
   h4 {
@@ -578,6 +860,17 @@ const handleSuccess = () => {
     margin-bottom: 15px;
     font-size: 16px;
     color: #303133;
+  }
+
+  .form-tip {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 5px;
+  }
+
+  .spec-item {
+    font-size: 12px;
+    line-height: 1.4;
   }
 }
 

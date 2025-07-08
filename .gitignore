@@ -26,3 +26,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Ignore learn and docs folders in root directory
+/learn/
+/docs/

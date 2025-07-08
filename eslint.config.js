@@ -31,6 +31,7 @@ export default [
     rules: {
       'no-undef': 'off',
       'vue/no-undef-components': 'off',
+      'vue/multi-word-component-names': 'off',
     },
   },
 ]

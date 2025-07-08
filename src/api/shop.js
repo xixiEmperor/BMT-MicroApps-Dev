@@ -153,8 +153,10 @@ export function getProductSpecOptions(productId) {
  * @param {Number} specData.status 状态：1-正常，0-禁用，默认为1
  * @returns {Promise} 返回添加结果
  */
-export function addProductSpecification(productId, specData) {
-  return request.post(`/api/mall/products/${productId}/specifications`, specData)
+export function addProductSpecification(productId, specData, options = {}) {
+  return request.post(`/api/mall/products/${productId}/specifications`, specData, {
+    signal: options.signal
+  })
 }
 
 /**
