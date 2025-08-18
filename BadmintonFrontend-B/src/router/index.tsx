@@ -1,22 +1,8 @@
-/**
- * 路由配置
- * - 使用 React Router v7 createBrowserRouter
- * - 每个子路由通过 handle.meta.title 提供标题，配合 `useChangeTitle`
- * - 支持微前端环境的路由适配
- */
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { ROUTES } from '@/types/routes'
 import { lazy } from 'react'
 
-// 扩展Window接口以支持无界微前端
-declare global {
-  interface Window {
-    __POWERED_BY_WUJIE__?: boolean
-    __WUJIE?: any
-    $wujie?: any
-  }
-}
-
+// ... 保持组件导入不变
 const Admin = lazy(() => import('@/pages/Admin'))
 const DashBoard = lazy(() => import('@/pages/DashBoard/DashBoard'))
 const BookingReview = lazy(() => import('@/pages/Venue/BookingReview'))
@@ -28,26 +14,13 @@ const Orders = lazy(() => import('@/pages/Shop/Orders'))
 const VenueManagement = lazy(() => import('@/pages/Venue/VenueManagement'))
 const UserManagement = lazy(() => import('@/pages/User/UserManagement'))
 
-/**
- * 获取基础路径
- * 在微前端环境中，路由由主应用管理，子应用不需要设置basename
- * 在独立运行时，使用默认的根路径
- */
+// 获取base path
 const getBasePath = () => {
-  // 检测是否在无界微前端环境中
-  if (typeof window !== 'undefined') {
-    const isWujieEnv = window.__POWERED_BY_WUJIE__ || 
-                      window.__WUJIE || 
-                      window.$wujie
-    
-    if (isWujieEnv) {
-      console.log('🎯 [Router] 检测到微前端环境，使用空basename')
-      return ''  // 微前端环境中，路由由主应用统一管理
-    }
+  if (window.__POWERED_BY_WUJIE__) {
+    // 在无界环境中，路由由主应用管理
+    return ''
   }
-  
-  console.log('🏠 [Router] 独立运行模式，使用默认basename')
-  return ''  // 独立运行时的基础路径
+  return ''
 }
 
 const router = createBrowserRouter([
