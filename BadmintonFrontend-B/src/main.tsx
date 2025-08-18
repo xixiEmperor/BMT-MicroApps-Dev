@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import 'antd/dist/reset.css'
 import App from './App.tsx'
 import './index.css'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // 声明全局类型
 declare global {
@@ -18,6 +19,7 @@ declare global {
 }
 
 let root: any = null
+const queryClient = new QueryClient()
 
 // 渲染函数
 function render(props: any = {}) {
@@ -26,7 +28,9 @@ function render(props: any = {}) {
     root = createRoot(container)
     root.render(
       <StrictMode>
-        <App {...props} />
+        <QueryClientProvider client={queryClient}>
+          <App {...props} />
+        </QueryClientProvider>
       </StrictMode>
     )
   }
