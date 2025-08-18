@@ -1,3 +1,17 @@
+/**
+ * Vue Router 路由配置
+ * 
+ * 本路由配置支持微前端架构：
+ * 1. C端用户路由：首页、商城、论坛、用户中心等（Vue3实现）
+ * 2. B端管理后台路由：通过无界微前端框架集成React应用
+ * 
+ * 微前端实现说明：
+ * - /admin/* 路由被统一代理到AdminContainer组件
+ * - AdminContainer使用无界框架加载React子应用
+ * - React子应用内部路由由React Router管理
+ * - 主子应用间通过无界事件总线通信
+ */
+
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { useUserStore } from '@/stores'
 
@@ -95,59 +109,39 @@ const router = createRouter({
         }
       ],
     },
-    // 后台管理系统路由
+    /**
+     * 微前端管理后台路由配置
+     * 
+     * 这个路由配置用于集成React管理后台子应用
+     * 主要特点：
+     * 1. 使用 pathMatch(.*) 捕获所有 /admin/* 路径
+     * 2. 由无界容器组件(AdminContainer)负责渲染React子应用
+     * 3. 子应用内部的路由由React Router管理
+     * 4. 保持与原有权限验证逻辑的兼容性
+     */
     {
-      path: '/admin',
-      component: () => import('@/views/admin/layout/AdminLayout.vue'),
-      redirect: '/admin/dashboard',
-      meta: { requiresAdmin: true, title: '预订系统后台' },
-      children: [
-        {
-          path: 'dashboard',
-          component: () => import('@/views/admin/Dashboard.vue'),
-          meta: { title: '预订系统后台' },
-        },
-        {
-          path: 'booking-review',
-          component: () => import('@/views/admin/BookingReview.vue'),
-          meta: { title: '预订系统后台' },
-        },
-        {
-          path: 'notice',
-          component: () => import('@/views/admin/Notice.vue'),
-          meta: { title: '预订系统后台' },
-        },
-        {
-          path: 'forum',
-          component: () => import('@/views/admin/ForumManagement.vue'),
-          meta: { title: '论坛管理 - 预订系统后台' },
-        },
-        {
-          path: 'forum/post/:id',
-          component: () => import('@/views/admin/ForumPostDetail.vue'),
-          meta: { title: '帖子详情 - 预订系统后台' },
-        },
-        {
-          path: 'products',
-          component: () => import('@/views/admin/shop/ProductManagement.vue'),
-          meta: { title: '商品管理 - 预订系统后台' },
-        },
-        {
-          path: 'orders',
-          component: () => import('@/views/admin/shop/OrderManagement.vue'),
-          meta: { title: '商品订单 - 预订系统后台' },
-        },
-        {
-          path: 'venue-management',
-          component: () => import('@/views/admin/VenueManagement.vue'),
-          meta: { title: '场地管理 - 预订系统后台' },
-        },
-        {
-          path: 'user-management',
-          component: () => import('@/views/admin/UserManagement.vue'),
-          meta: { title: '用户管理 - 预订系统后台' },
-        },
-      ],
+      // 使用动态路由匹配所有admin开头的路径
+      // pathMatch(.*) 表示匹配任意字符，* 表示可选
+      // 这样 /admin、/admin/dashboard、/admin/users 等路径都会被捕获
+      path: '/admin/:pathMatch(.*)*',
+      
+      // 使用无界容器组件，负责加载和渲染React子应用
+      component: () => import('@/views/admin/AdminContainer.vue'),
+      
+      meta: { 
+        // 需要管理员权限验证
+        requiresAdmin: true, 
+        
+        // 页面标题
+        title: '管理后台',
+        
+        // 关闭Keep-Alive缓存，确保每次访问都是最新状态
+        // 这对微前端应用很重要，避免状态混乱
+        keepAlive: false,
+        
+        // 微前端标识，用于区分这是一个微前端路由
+        isMicroFrontend: true
+      },
     },
     {
       path: '/login',
