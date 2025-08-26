@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint --ext .js,.vue src",
+    "lint": "eslint --ext .js,.vue,.ts src",
+    "type-check": "vue-tsc --noEmit",
     "format": "prettier --write src/",
     "dev:micro": "node dev-microfrontend.cjs",
     "build:micro": "npm run build && cd BadmintonFrontend-B && npm run build",
@@ -17,6 +18,8 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "@vueup/vue-quill": "^1.2.0",
+    "@wfynbzlx666/sdk-http": "^0.0.2",
+    "@wfynbzlx666/sdk-perf": "^0.0.2",
     "axios": "^1.8.4",
     "echarts": "^5.6.0",
     "element-plus": "^2.9.6",
@@ -33,8 +36,14 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.22.0",
     "@eslint/js": "^9.21.0",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.0.0",
+    "@vue/tsconfig": "^0.7.0",
     "chalk": "4.1.2",
     "eslint": "^9.22.0",
     "eslint-plugin-vue": "~10.0.0",
@@ -42,9 +51,11 @@
     "less": "^4.2.2",
     "less-loader": "^12.2.0",
     "prettier": "3.5.3",
+    "typescript": "^5.6.0",
     "unplugin-auto-import": "^19.1.1",
     "unplugin-vue-components": "^28.4.1",
     "vite": "^6.2.1",
-    "vite-plugin-vue-devtools": "^7.7.2"
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vue-tsc": "^2.0.0"
   }
 }
