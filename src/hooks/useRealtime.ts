@@ -1,19 +1,19 @@
-import { Realtime } from '@wfynbzlx666/sdk-realtime'
+import { Realtime, type RealtimeOptions } from '@wfynbzlx666/sdk-realtime'
 
 export const useRealtime = () => {
   const user = JSON.parse(localStorage.getItem('user'))
 
   // 初始化连接配置
-  const options = {
+  const options: RealtimeOptions = {
     url: 'ws://localhost:5000', //import.meta.env.WS_URL
     auth: () => {
       return localStorage.getItem('token')
     },
     user: {
-      id: user.userinfo.id,
-      role: user.userinfo.role
+      userId: user.userinfo.id,
+      user_role: user.userinfo.role,
     },
-    heartbeatInterval: 1000,
+    heartbeatInterval: 15000,
     reconnect: {
       enabled: true,
       maxAttempts: 5,
@@ -51,7 +51,7 @@ export const useRealtime = () => {
   const publish = (topic: string, data: any) => {
     Realtime.publish(topic, data)
   }
-  
+
   /**
    * 监听连接状态变化
    * @param listener 回调函数，用于接收连接状态变化
