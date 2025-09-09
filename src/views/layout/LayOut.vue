@@ -5,7 +5,7 @@ import { useUserStore, useCartStore } from '@/stores'
 import { useRouter } from 'vue-router'
 import { navigate } from '@/utils/router'
 import logoImg from '@/assets/whlg_logo.png'
-import { useTokenCheck } from '@/composables/useTokenCheck'
+import { useTokenCheck } from '@/hooks/useTokenCheck'
 
 // 路由
 const userStore = useUserStore()

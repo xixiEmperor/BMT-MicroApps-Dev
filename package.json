@@ -19,7 +19,8 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@vueup/vue-quill": "^1.2.0",
     "@wfynbzlx666/sdk-http": "^0.0.2",
-    "@wfynbzlx666/sdk-perf": "^0.0.2",
+    "@wfynbzlx666/sdk-perf": "^1.0.0",
+    "@wfynbzlx666/sdk-realtime": "^0.0.1",
     "axios": "^1.8.4",
     "echarts": "^5.6.0",
     "element-plus": "^2.9.6",
@@ -57,5 +58,11 @@
     "vite": "^6.2.1",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vue-tsc": "^2.0.0"
+  },
+  "overrides": {
+    "@wfynbzlx666/sdk-realtime": "link:../BMT-Centrol-SDK/packages/sdk-realtime",
+    "@wfynbzlx666/sdk-http": "link:../BMT-Centrol-SDK/packages/sdk-http",
+    "@wfynbzlx666/sdk-perf": "link:../BMT-Centrol-SDK/packages/sdk-perf",
+    "@wfynbzlx666/sdk-core": "link:../BMT-Centrol-SDK/packages/sdk-core"
   }
 }

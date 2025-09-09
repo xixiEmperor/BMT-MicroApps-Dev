@@ -41,8 +41,15 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
+      emptyOutDir: true,
+      cssCodeSplit: true,
       sourcemap: false,
       minify: 'esbuild',
+      esbuildOptions: {
+        drop: ['console', 'debugger'],
+        legalComments: 'none',
+      },
+      reportCompressedSize: true,
     },
     server: {
       proxy: {
@@ -55,7 +62,7 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false
-        }
+        },
       }
     }
   }

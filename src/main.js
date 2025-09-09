@@ -17,8 +17,11 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import directives from './utils/directives'
 
+// 导入实时连接hooks，在全局进行连接
+import { useRealtime } from '@/hooks/useRealtime'
+
 // 导入无界微前端配置 - 用于集成React管理后台
-import { initWujie } from '@/plugins/wujie'
+import { initWujie } from '@/utils/wujie'
 
 // 创建Vue应用实例
 const app = createApp(App)
@@ -46,11 +49,13 @@ app.directive('auth', directives.auth)
  * 
  * 注意：必须在Vue应用挂载前初始化，确保路由守卫能正确处理子应用路由
  */
-console.log('🚀 [Main] 开始初始化无界微前端框架...')
 initWujie()
 
 // 挂载Vue应用到#app元素
 // 这是应用启动的最后一步
 app.mount('#app')
 
-console.log('✅ [Main] Vue主应用启动完成')
+useRealtime().onConnectionChange((status) => {
+  console.log('🚀 [Main] 实时连接状态变化:', status)
+})
+await useRealtime().connect()

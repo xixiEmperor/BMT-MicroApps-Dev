@@ -1,7 +1,7 @@
 <script setup>
 import { ref, nextTick, onMounted, reactive, computed } from 'vue'
 import { marked } from 'marked'
-import { useDifyChat } from '@/composables/useDifyChat'
+import { useDifyChat } from '@/hooks/useDifyChat'
 import { useUserStore } from '@/stores'
 import ConfigPanel from '@/components/ConfigPanel.vue'
 import { ElMessage } from 'element-plus'

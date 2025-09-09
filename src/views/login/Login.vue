@@ -136,11 +136,13 @@ const login = async () => {
     // 调用登录服务
     const res = await authLoginService(formModel.value)
 
-    if (res.data.code === 0) {
+    console.log(res)
+
+    if (res.code === 0) {
       ElMessage.success('登录成功')
 
       // 设置token和过期时间
-      const token = res.data.data.token
+      const token = res.data.token
       userStore.setToken(token)
 
       // 先获取用户信息，注意添加await
@@ -159,7 +161,7 @@ const login = async () => {
         router.push(redirect)
       }
     } else {
-      ElMessage.error(res.data.message)
+      ElMessage.error(res.message)
     }
   } catch (error) {
     ElMessage.error(`登录失败: ${error.response?.data?.message || error.message || '未知错误'}`)

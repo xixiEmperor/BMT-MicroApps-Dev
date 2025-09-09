@@ -55,7 +55,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { Loading, Warning } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { bus, startReactAdmin } from '@/plugins/wujie'
+import { bus, startReactAdmin } from '@/utils/wujie'
 
 /**
  * 组件状态管理

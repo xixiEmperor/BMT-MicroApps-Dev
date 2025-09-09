@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import http from '@/utils/http'
 
 // 发送验证码
 export const authSendCodeService = (data) => {
@@ -20,12 +21,7 @@ export const authRegisterService = (data) => {
 
 // 用户登录
 export const authLoginService = (data) => {
-  // TODO: 登录成功后，将token和用户信息保存到Pinia store中
-  return request({
-    url: '/api/auth/login',
-    method: 'post',
-    data,
-  })
+  return http.post('/api/auth/login', data)
 }
 
 // 忘记密码（已废弃，使用发送验证码接口）
