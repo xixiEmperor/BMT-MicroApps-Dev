@@ -1,20 +1,6 @@
-<!--
-  管理后台容器组件
-  
-  这个组件是微前端架构中的关键组件，主要功能：
-  1. 作为React子应用的载体和容器
-  2. 处理主子应用间的数据传递和通信
-  3. 管理子应用的生命周期（加载、挂载、卸载）
-  4. 提供用户友好的加载状态显示
-  5. 处理子应用加载错误的容错机制
--->
-
 <template>
   <div class="admin-container">
-    <!-- 
-      加载状态显示区域
-      当子应用还在加载时显示，提升用户体验
-    -->
+    <!-- 加载状态显示区域，当子应用还在加载时显示，提升用户体验-->
     <div v-if="loading" class="loading-container">
       <!-- Element Plus的加载动画组件 -->
       <el-icon class="loading-icon" :size="40">
@@ -54,7 +40,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { Loading, Warning } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { bus, startReactAdmin } from '@/utils/wujie'
 
 /**
@@ -67,22 +52,6 @@ const errorMessage = ref('')     // 错误信息
 const subAppContainer = ref(null) // 子应用容器引用
 
 /**
- * 计算管理后台URL
- * 根据当前环境（开发/生产）返回对应的子应用地址
- * 保持与wujie.js配置一致
- */
-const adminUrl = computed(() => {
-  // 使用与wujie.js相同的环境判断逻辑
-  const url = process.env.NODE_ENV === 'development'
-    ? 'http://localhost:5000'  // 开发环境：React开发服务器地址
-    : '/admin-static'          // 生产环境：nginx配置的静态资源路径
-  
-  console.log(`📍 [AdminContainer] 子应用地址: ${url}`)
-  console.log(`🌍 [AdminContainer] 当前环境: ${process.env.NODE_ENV}`)
-  return url
-})
-
-/**
  * 传递给子应用的数据
  * 这些数据会通过无界框架传递给React子应用
  * React子应用可以通过 window.__WUJIE.props 访问这些数据
@@ -91,21 +60,15 @@ const adminProps = computed(() => {
   const props = {
     // 用户基本信息
     userInfo: userStore.userinfo,
-    
     // 认证token，用于API请求
     token: userStore.token,
-    
     // 主题配置（预留，可用于主子应用主题同步）
     theme: 'light',
-    
     // 语言配置（预留，可用于国际化）
     language: 'zh-CN',
-    
     // 时间戳，用于检测数据更新
     timestamp: Date.now()
   }
-  
-  console.log('📦 [AdminContainer] 传递给子应用的数据:', props)
   return props
 })
 
@@ -114,8 +77,6 @@ const adminProps = computed(() => {
  */
 const startSubApp = async () => {
   try {
-    console.log('🎯 [AdminContainer] 开始启动React子应用...')
-    
     // 确保容器元素存在
     if (!subAppContainer.value) {
       throw new Error('子应用容器元素不存在')
@@ -127,16 +88,13 @@ const startSubApp = async () => {
     // 启动成功
     loading.value = false
     error.value = false
-    console.log('✅ [AdminContainer] React子应用启动成功')
     
     // 向子应用发送初始数据
     setTimeout(() => {
       bus.$emit('user-info-updated', adminProps.value)
-      console.log('📤 [AdminContainer] 已向子应用发送用户信息')
     }, 500)
     
   } catch (err) {
-    console.error('❌ [AdminContainer] 子应用启动失败:', err)
     handleError(err)
   }
 }
@@ -149,8 +107,6 @@ const handleError = (errorInfo) => {
   // 提取错误信息
   const message = errorInfo?.message || errorInfo?.toString() || '未知错误'
   errorMessage.value = message
-  
-  console.error('❌ [AdminContainer] 管理后台加载失败:', errorInfo)
   
   // 用户友好的错误提示
   if (message.includes('Failed to fetch')) {
@@ -168,7 +124,6 @@ const handleError = (errorInfo) => {
  * 重新加载子应用
  */
 const retryLoad = async () => {
-  console.log('🔄 [AdminContainer] 用户手动重新加载子应用')
   error.value = false
   loading.value = true
   
@@ -181,7 +136,6 @@ const retryLoad = async () => {
  */
 const handleUserInfoChange = () => {
   if (!loading.value && !error.value) {
-    console.log('🔄 [AdminContainer] 用户信息发生变化，同步到子应用')
     bus.$emit('user-info-updated', adminProps.value)
   }
 }
@@ -190,21 +144,6 @@ const handleUserInfoChange = () => {
  * 组件挂载时的初始化逻辑
  */
 onMounted(() => {
-  console.log('🚀 [AdminContainer] 组件已挂载，开始初始化...')
-  
-  // 详细的环境和配置日志
-  console.log('🌍 [AdminContainer] 环境信息:')
-  console.log('  - NODE_ENV:', process.env.NODE_ENV)
-  console.log('  - import.meta.env.DEV:', import.meta.env.DEV)
-  console.log('  - import.meta.env.PROD:', import.meta.env.PROD)
-  console.log('  - 计算出的子应用URL:', adminUrl.value)
-  console.log('📦 [AdminContainer] 传递给子应用的props:', adminProps.value)
-  
-  // 检查用户权限
-  if (userStore.userinfo?.role !== 'ROLE_ADMIN') {
-    console.warn('⚠️ [AdminContainer] 当前用户不是管理员，可能无法正常使用管理后台')
-  }
-  
   // 监听用户信息变化
   // 当用户信息在主应用中发生变化时，自动同步到子应用
   userStore.$subscribe(handleUserInfoChange)
@@ -221,7 +160,6 @@ onMounted(() => {
   
   // 处理子应用的退出登录请求
   bus.$on('admin-logout', () => {
-    console.log('📨 [AdminContainer] 收到子应用退出登录请求')
     
     ElMessageBox.confirm(
       '您确定要退出登录吗？',
@@ -237,7 +175,6 @@ onMounted(() => {
       // 跳转到登录页
       window.location.href = '/login'
     }).catch(() => {
-      console.log('用户取消退出登录')
     })
   })
   
@@ -250,14 +187,12 @@ onMounted(() => {
   
   // 处理子应用发送的用户信息更新
   bus.$on('admin-user-updated', (userData) => {
-    console.log('📨 [AdminContainer] 收到子应用用户信息更新:', userData)
     // 子应用更新了用户信息，同步到主应用
     userStore.updateUserInfo(userData)
   })
   
   // 处理子应用的通知消息
   bus.$on('admin-message', ({ type, message }) => {
-    console.log('📨 [AdminContainer] 收到子应用消息:', { type, message })
     // 显示子应用发送的消息
     if (type === 'success') {
       ElMessage.success(message)
@@ -275,8 +210,6 @@ onMounted(() => {
  * 组件卸载时的清理逻辑
  */
 onUnmounted(() => {
-  console.log('🗑️ [AdminContainer] 组件即将卸载，清理事件监听...')
-  
   // 清理事件监听，防止内存泄漏
   bus.$off('admin-logout')
   bus.$off('admin-navigate')

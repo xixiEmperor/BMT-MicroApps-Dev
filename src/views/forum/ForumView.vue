@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { navigate } from '@/utils/router'
@@ -58,10 +58,10 @@ const getForumListData = async () => {
       if (!a.isTop && b.isTop) return 1;
       // 如果都置顶，则按置顶时间排序（后置顶的在前面）
       if (a.isTop && b.isTop) {
-        return new Date(b.topTime || b.publishTime) - new Date(a.topTime || a.publishTime);
+        return new Date(b.topTime || b.publishTime).getTime() - new Date(a.topTime || a.publishTime).getTime();
       }
       // 如果都不置顶，保持原有顺序（按发布时间倒序）
-      return new Date(b.publishTime) - new Date(a.publishTime);
+      return new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime();
     });
 
     // 将帖子列表数据存储到论坛store中

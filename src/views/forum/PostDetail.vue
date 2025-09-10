@@ -14,6 +14,7 @@ import {
   deleteCommentService,
   deletePostService
 } from '@/api/forum'
+import { useRealtime } from '@/hooks/useRealtime'
 
 const route = useRoute()
 const router = useRouter()
@@ -134,6 +135,7 @@ const likeComment = async (comment) => {
         comment.likes += 1
         comment.isLiked = true
         ElMessage.success('点赞成功')
+        useRealtime().publish(`post_like_to_${storePostDetail.value.author}`, `${userStore.userinfo.username}点赞了你的评论`)
       } else {
         ElMessage.error(res.data.msg || '操作失败')
       }
@@ -172,6 +174,7 @@ const submitComment = async () => {
       await getPostDetailWithStore()
       commentContent.value = ''
       ElMessage.success('评论发表成功')
+      useRealtime().publish(`post_comment_to_${storePostDetail.value.author}`, `${userStore.userinfo.username}评论了你的帖子`)
     } else {
       ElMessage.error(res.data.msg || '评论发表失败')
     }

@@ -25,22 +25,17 @@ const wujieConfig = {
     'react-admin': {
       // 开发环境地址 - React项目运行在5000端口
       devUrl: 'http://localhost:5000',
-      
       // 生产环境地址 - 静态资源路径，将在nginx中配置
       prodUrl: '/admin-static',
-      
       // 预加载配置 - 提前加载子应用资源，提升首次访问速度
       preload: true,
-      
       // 保活模式 - 子应用切换时不销毁，保持状态和数据
       // 优点：切换快速，状态保持
       // 缺点：内存占用相对较高
       alive: true,
-      
       // 路由同步 - 子应用路由变化时同步到主应用地址栏
       // 确保浏览器前进后退按钮正常工作
       sync: true,
-      
       // 自定义fetch函数 - 用于处理子应用资源请求
       // 主要用于解决跨域问题和添加自定义请求头
       fetch: (url, options) => {
@@ -162,9 +157,6 @@ export function startReactAdmin(container, props = {}) {
   const appUrl = process.env.NODE_ENV === 'development' 
     ? reactAdminConfig.devUrl 
     : reactAdminConfig.prodUrl
-  
-  console.log('🎯 [Wujie] 启动React管理后台子应用')
-  console.log('📦 [Wujie] 传递给子应用的数据:', props)
   
   return startApp({
     name: 'react-admin',    // 子应用名称，必须与setupApp中的name一致

@@ -62,6 +62,7 @@ declare module 'vue' {
     OrderDetailDialog: typeof import('./components/OrderDetailDialog.vue')['default']
     PaymentStatusTest: typeof import('./components/PaymentStatusTest.vue')['default']
     QRCodeTest: typeof import('./components/QRCodeTest.vue')['default']
+    RealtimeNoticeCard: typeof import('./components/RealtimeNoticeCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VerificationCodeInput: typeof import('./components/VerificationCodeInput.vue')['default']

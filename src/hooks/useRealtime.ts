@@ -1,7 +1,7 @@
 import { Realtime, type RealtimeOptions } from '@wfynbzlx666/sdk-realtime'
 
 export const useRealtime = () => {
-  const user = JSON.parse(localStorage.getItem('user'))
+  const uInfo = JSON.parse(localStorage.getItem('user'))
 
   // 初始化连接配置
   const options: RealtimeOptions = {
@@ -10,8 +10,8 @@ export const useRealtime = () => {
       return localStorage.getItem('token')
     },
     user: {
-      userId: user.userinfo.id,
-      user_role: user.userinfo.role,
+      userId: uInfo.userinfo.id,
+      user_role: uInfo.userinfo.role,
     },
     heartbeatInterval: 15000,
     reconnect: {

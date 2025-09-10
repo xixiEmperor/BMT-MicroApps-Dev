@@ -2,6 +2,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getNoticeList, getNoticeDetail } from '@/api/booking'
 import { formatDateTime } from '@/utils/format'
+import { useRealtime } from '@/hooks/useRealtime'
+import { ElNotification } from 'element-plus'
 
 // 筛选条件
 const filterType = ref(null)
@@ -119,6 +121,13 @@ const handleNoticeClick = async (notice) => {
 
 // 初始化
 onMounted(() => {
+  useRealtime().subscribe('venue_notice', (data) => {
+    ElNotification({
+      title: '通知公告',
+      message: data.payload,
+      type: 'info',
+    })
+  })
   fetchNoticeList()
 })
 </script>

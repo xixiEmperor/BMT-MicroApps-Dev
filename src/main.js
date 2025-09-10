@@ -17,9 +17,6 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import directives from './utils/directives'
 
-// 导入实时连接hooks，在全局进行连接
-import { useRealtime } from '@/hooks/useRealtime'
-
 // 导入无界微前端配置 - 用于集成React管理后台
 import { initWujie } from '@/utils/wujie'
 
@@ -54,16 +51,3 @@ initWujie()
 // 挂载Vue应用到#app元素
 // 这是应用启动的最后一步
 app.mount('#app')
-
-useRealtime().onConnectionChange((status) => {
-  console.log('🚀 [Main] 实时连接状态变化:', status)
-})
-await useRealtime().connect()
-
-useRealtime().subscribe('test', (data) => {
-  console.log('🚀 [Main] 测试收到实时消息:', data)
-})
-
-useRealtime().publish('test', {
-  message: 'Hello, World!'
-})

@@ -5,6 +5,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -35,6 +36,10 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@wfynbzlx666/sdk-realtime': path.resolve(__dirname, '../BMT-Central-SDK/packages/sdk-realtime/src/index'),
+        '@wfynbzlx666/sdk-http': path.resolve(__dirname, '../BMT-Central-SDK/packages/sdk-http/src/index'),
+        '@wfynbzlx666/sdk-perf': path.resolve(__dirname, '../BMT-Central-SDK/packages/sdk-perf/src/index'),
+        '@wfynbzlx666/sdk-core': path.resolve(__dirname, '../BMT-Central-SDK/packages/sdk-core/src/index'),
       },
     },
     // 生产构建优化
