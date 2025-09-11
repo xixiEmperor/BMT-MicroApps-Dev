@@ -8,15 +8,27 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // 声明全局类型
 declare global {
   interface Window {
-    __POWERED_BY_WUJIE__?: boolean
-    __WUJIE_MOUNT?: () => void
-    __WUJIE_UNMOUNT?: () => void
-    __WUJIE?: {
-      props?: any
-      bus?: any
-    }
+    // 是否存在无界
+    __POWERED_BY_WUJIE__?: boolean;
+    // 子应用公共加载路径
+    __WUJIE_PUBLIC_PATH__: string;
+    // 子应用沙盒实例
+    __WUJIE: any;
+    // 子应用mount函数
+    __WUJIE_MOUNT: () => void;
+    // 子应用unmount函数
+    __WUJIE_UNMOUNT: () => void | Promise<void>;
+    // 注入对象
+    $wujie: {
+      bus: any;
+      shadowRoot?: ShadowRoot;
+      props?: { [key: string]: any };
+      location?: object;
+    };
   }
 }
+
+console.log(window.$wujie.props)
 
 let root: any = null
 const queryClient = new QueryClient()
@@ -58,12 +70,4 @@ if (window.__POWERED_BY_WUJIE__) {
 } else {
   // 独立运行
   render()
-}
-
-// 监听无界Props更新
-if (window.__WUJIE?.bus) {
-  window.__WUJIE.bus.$on('user-info-updated', (props: any) => {
-    // 可以在这里处理主应用传递的数据更新
-    console.log('收到主应用数据更新:', props)
-  })
 }

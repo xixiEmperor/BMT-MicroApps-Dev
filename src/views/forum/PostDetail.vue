@@ -135,7 +135,6 @@ const likeComment = async (comment) => {
         comment.likes += 1
         comment.isLiked = true
         ElMessage.success('点赞成功')
-        useRealtime().publish(`post_like_to_${storePostDetail.value.author}`, `${userStore.userinfo.username}点赞了你的评论`)
       } else {
         ElMessage.error(res.data.msg || '操作失败')
       }
@@ -402,6 +401,7 @@ const likePost = async () => {
           likes: storePostDetail.value.likes + 1
         }
         forumStore.setCurrentPost(updatedPost)
+        useRealtime().publish(`post_like_to_${storePostDetail.value.author}`, `${userStore.userinfo.username}点赞了你的帖子`)
         ElMessage.success('点赞成功')
       } else {
         ElMessage.error(res.data.msg || '操作失败')

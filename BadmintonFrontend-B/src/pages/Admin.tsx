@@ -184,6 +184,7 @@ export default function Admin() {
         // 2. 重置应用状态
         // 3. 跳转到登录页面
         console.log('退出登录')
+        window.$wujie.bus.$emit('admin-logout')
         break
       // 可以在这里添加更多用户操作，如个人设置、修改密码等
     }

@@ -373,7 +373,7 @@ export default function SpecificationManager({ open, product, onOk, onCancel }: 
     const failed = queue.getFailedTaskIds()
     if (!failed.length) return message.info('没有失败任务')
     failed.forEach((id) => {
-      const row = rowMapRef.current.get(id)
+      const row = rowMapRef.current.get(String(id))
       if (!row) return
       queue.addWithId(id, async () => {
         const payload: AddSpecificationData = {

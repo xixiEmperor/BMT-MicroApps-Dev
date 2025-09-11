@@ -14,8 +14,8 @@
 
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { useUserStore } from '@/stores'
-import { nextTick } from 'vue'
-import { Perf } from '@wfynbzlx666/sdk-perf'
+// import { nextTick } from 'vue'
+// import { Perf } from '@wfynbzlx666/sdk-perf'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -219,29 +219,29 @@ router.beforeEach((to, from, next) => {
 })
 
 // 全局后置钩子 - 页面性能监控
-router.afterEach((to, from) => {
-  // 记录路由变化
-  console.log(`路由从 ${from.path} 跳转到 ${to.path}`)
+// router.afterEach((to, from) => {
+//   // 记录路由变化
+//   console.log(`路由从 ${from.path} 跳转到 ${to.path}`)
   
-  // 使用 Vue 的 nextTick 确保 DOM 更新完成
-  nextTick(() => {
-    // 再使用 requestAnimationFrame 确保渲染完成
-    requestAnimationFrame(() => {
-      // 延迟一帧，确保所有异步组件都加载完成
-      requestAnimationFrame(() => {
-        // 现在可以安全地进行性能分析
-        Perf.init({
-          sampleRate: 1,
-          autoEnableWebVitals: true,
-          enableDetailedMonitoring: false,
-          enableAdvancedMetrics: false,
-          onMetric: (metric) => {
-            console.log(metric)
-          }
-        })
-      })
-    })
-  })
-})
+//   // 使用 Vue 的 nextTick 确保 DOM 更新完成
+//   nextTick(() => {
+//     // 再使用 requestAnimationFrame 确保渲染完成
+//     requestAnimationFrame(() => {
+//       // 延迟一帧，确保所有异步组件都加载完成
+//       requestAnimationFrame(() => {
+//         // 现在可以安全地进行性能分析
+//         Perf.init({
+//           sampleRate: 1,
+//           autoEnableWebVitals: true,
+//           enableDetailedMonitoring: false,
+//           enableAdvancedMetrics: false,
+//           onMetric: (metric) => {
+//             console.log(metric)
+//           }
+//         })
+//       })
+//     })
+//   })
+// })
 
 export default router

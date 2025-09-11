@@ -23,10 +23,7 @@
       <el-button type="primary" @click="retryLoad">重新加载</el-button>
     </div>
     
-    <!-- 
-      子应用容器
-      使用命令式API直接挂载React子应用
-    -->
+    <!-- 子应用容器 -->
     <div 
       v-show="!loading && !error"
       ref="subAppContainer"
@@ -41,6 +38,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { Loading, Warning } from '@element-plus/icons-vue'
 import { bus, startReactAdmin } from '@/utils/wujie'
+import { useRealtime } from '@/hooks/useRealtime'
 
 /**
  * 组件状态管理
@@ -67,7 +65,9 @@ const adminProps = computed(() => {
     // 语言配置（预留，可用于国际化）
     language: 'zh-CN',
     // 时间戳，用于检测数据更新
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    // 实时通信hook
+    useRealtime: useRealtime()
   }
   return props
 })
@@ -90,9 +90,9 @@ const startSubApp = async () => {
     error.value = false
     
     // 向子应用发送初始数据
-    setTimeout(() => {
-      bus.$emit('user-info-updated', adminProps.value)
-    }, 500)
+    // setTimeout(() => {
+    //   bus.$emit('user-info-updated', adminProps.value)
+    // }, 500)
     
   } catch (err) {
     handleError(err)
@@ -134,11 +134,11 @@ const retryLoad = async () => {
 /**
  * 监听用户信息变化，实时同步到子应用
  */
-const handleUserInfoChange = () => {
-  if (!loading.value && !error.value) {
-    bus.$emit('user-info-updated', adminProps.value)
-  }
-}
+// const handleUserInfoChange = () => {
+//   if (!loading.value && !error.value) {
+//     bus.$emit('user-info-updated', adminProps.value)
+//   }
+// }
 
 /**
  * 组件挂载时的初始化逻辑
@@ -146,7 +146,8 @@ const handleUserInfoChange = () => {
 onMounted(() => {
   // 监听用户信息变化
   // 当用户信息在主应用中发生变化时，自动同步到子应用
-  userStore.$subscribe(handleUserInfoChange)
+  // userStore.$subscribe(handleUserInfoChange)
+  console.log(adminProps.value)
   
   // 等待DOM渲染完成后启动子应用
   setTimeout(async () => {
@@ -172,7 +173,6 @@ onMounted(() => {
     ).then(() => {
       userStore.logout()
       ElMessage.success('已退出登录')
-      // 跳转到登录页
       window.location.href = '/login'
     }).catch(() => {
     })

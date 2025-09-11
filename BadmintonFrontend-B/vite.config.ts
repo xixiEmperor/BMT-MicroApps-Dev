@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5000,
+    port: 5500,
     open: false, // 改为false，避免自动打开
     cors: true, // 启用CORS
     headers: {

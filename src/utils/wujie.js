@@ -24,62 +24,13 @@ const wujieConfig = {
     // React管理后台子应用配置
     'react-admin': {
       // 开发环境地址 - React项目运行在5000端口
-      devUrl: 'http://localhost:5000',
+      devUrl: 'http://localhost:5500',
       // 生产环境地址 - 静态资源路径，将在nginx中配置
       prodUrl: '/admin-static',
       // 预加载配置 - 提前加载子应用资源，提升首次访问速度
       preload: true,
-      // 保活模式 - 子应用切换时不销毁，保持状态和数据
-      // 优点：切换快速，状态保持
-      // 缺点：内存占用相对较高
-      alive: true,
-      // 路由同步 - 子应用路由变化时同步到主应用地址栏
-      // 确保浏览器前进后退按钮正常工作
+      // 路由同步 - wujie将子应用路由编码后作为父应用的查询参数
       sync: true,
-      // 自定义fetch函数 - 用于处理子应用资源请求
-      // 主要用于解决跨域问题和添加自定义请求头
-      fetch: (url, options) => {
-        return window.fetch(url, {
-          ...options,
-          headers: {
-            ...options?.headers,
-            // 添加CORS头，解决跨域问题
-            'Access-Control-Allow-Origin': '*',
-          }
-        })
-      },
-      
-      // 生命周期钩子函数 - 用于监听子应用的各个生命周期阶段
-      
-      // 子应用加载前钩子
-      beforeLoad: (appWindow) => {
-        console.log('🔄 [Wujie] 子应用开始加载:', appWindow)
-        // 可以在这里做一些准备工作，如显示loading
-      },
-      
-      // 子应用挂载前钩子
-      beforeMount: (appWindow) => {
-        console.log('📦 [Wujie] 子应用准备挂载:', appWindow)
-        // 可以在这里向子应用传递初始数据
-      },
-      
-      // 子应用挂载后钩子
-      afterMount: (appWindow) => {
-        console.log('✅ [Wujie] 子应用挂载完成:', appWindow)
-        // 子应用已经可以正常使用
-      },
-      
-      // 子应用卸载前钩子
-      beforeUnmount: (appWindow) => {
-        console.log('🔄 [Wujie] 子应用准备卸载:', appWindow)
-        // 可以在这里保存子应用状态
-      },
-      
-      // 子应用卸载后钩子
-      afterUnmount: (appWindow) => {
-        console.log('🗑️ [Wujie] 子应用已卸载:', appWindow)
-        // 清理工作完成
-      }
     }
   }
 }
@@ -111,16 +62,12 @@ export function initWujie() {
       ...reactAdminConfig           // 展开其他配置
     })
 
-    // 如果开启了预加载，则预加载子应用
-    // 预加载会提前下载子应用的HTML、CSS、JS资源
-    // 但不会执行JS代码，只有在真正需要时才会执行
     if (reactAdminConfig.preload) {
       
       try {
         // preloadApp是同步方法，没有返回值
         preloadApp({
           name: 'react-admin',
-          url: appUrl,
           // 添加预加载配置
           exec: false, // 不执行JS，只下载资源
           // 预加载错误处理
@@ -164,7 +111,7 @@ export function startReactAdmin(container, props = {}) {
     el: container,         // 子应用渲染的容器元素
     props,                 // 传递给子应用的数据，子应用可以通过window.__WUJIE.props访问
     alive: true,           // 启用保活模式
-    sync: true             // 启用路由同步
+    sync: true,            // 启用路由同步
   })
 }
 

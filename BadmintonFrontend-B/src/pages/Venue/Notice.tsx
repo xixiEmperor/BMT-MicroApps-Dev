@@ -8,6 +8,7 @@ import type { ColumnsType } from 'antd/es/table'
 import { formatDateTime } from '@/utils/date'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAdminNoticeList, createNotice, updateNotice, publishNotice, deleteNotice } from '@/api/Venue/noticeApi'
+import { useRealtime } from '@/hooks/useWebSocket'
 
 type NoticeItem = { id: number; title: string; content: string; type: 1 | 2; status: 0 | 1; createTime?: string; publishTime?: string }
 
@@ -47,9 +48,10 @@ export default function Notice() {
 
   const publishMutation = useMutation({
     mutationFn: async (id: number) => publishNotice(id),
-    onSuccess: () => {
+    onSuccess: async () => {
       message.success('发布成功')
       queryClient.invalidateQueries({ queryKey: ['notice.list'] })
+      await useRealtime.publish('venue_notice', '有一条新的场地通知')
     },
   })
 
@@ -111,7 +113,7 @@ export default function Notice() {
   ], [publishMutation, deleteMutation, form, modal, updateMutation])
 
   return (
-    <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="p-6">
       <Card title="新建/发布通知">
         <Form form={form} layout="vertical" initialValues={{ type: 2 }}>
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
