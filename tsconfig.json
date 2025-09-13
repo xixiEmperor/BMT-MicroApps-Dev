@@ -23,6 +23,7 @@
       "element-plus/global"
     ],
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "strict": false,
     "noEmit": true,

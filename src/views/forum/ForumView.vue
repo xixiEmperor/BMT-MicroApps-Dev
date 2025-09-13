@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useUserStore } from '@/stores'
 import { navigate } from '@/utils/router'

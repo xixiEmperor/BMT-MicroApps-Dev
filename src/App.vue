@@ -1,11 +1,11 @@
-<script setup lang="ts">
+<script setup>
 import zh from 'element-plus/es/locale/lang/zh-cn.mjs'
 import { onMounted, onBeforeUnmount } from 'vue'
 import { useUserStore } from '@/stores/modules/user'
 
 // 导入实时连接hooks，在全局进行连接
 import { useRealtime } from '@/hooks/useRealtime'
-import { ElNotification } from 'element-plus'
+import { ElNotification } from 'element-plus.'
 
 const userStore = useUserStore()
 
