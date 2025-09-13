@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/modules/user'
 
 // 导入实时连接hooks，在全局进行连接
 import { useRealtime } from '@/hooks/useRealtime'
-import { ElNotification } from 'element-plus.'
+import { ElNotification } from 'element-plus'
 
 const userStore = useUserStore()
 
